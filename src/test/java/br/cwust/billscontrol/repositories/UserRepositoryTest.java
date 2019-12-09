@@ -3,6 +3,8 @@ package br.cwust.billscontrol.repositories;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,9 +54,11 @@ public class UserRepositoryTest {
 		
 		Long id = user.getId();
 		
-		User userFindByEmail = userRepository.findByEmail(email);
+		Optional<User> userFindByEmail = userRepository.findByEmail(email);
 		
-		assertEquals(id, userFindByEmail.getId());
+		assertTrue(userFindByEmail.isPresent());
+		
+		assertEquals(id, userFindByEmail.get().getId());
 		
 	}
 

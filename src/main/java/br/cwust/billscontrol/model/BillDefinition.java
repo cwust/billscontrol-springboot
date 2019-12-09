@@ -101,4 +101,11 @@ public class BillDefinition {
 	public void setRecurrenceType(RecurrenceType recurrenceType) {
 		this.recurrenceType = recurrenceType;
 	}
+
+	@Override
+	public String toString() {
+		return "BillDefinition [id=" + id + ", user=" + user + ", name=" + name + ", defaultValue=" + defaultValue
+				+ ", startDate=" + startDate + ", endDate=" + endDate + ", category=" + category + ", recurrenceType="
+				+ recurrenceType + "]";
+	}
 }

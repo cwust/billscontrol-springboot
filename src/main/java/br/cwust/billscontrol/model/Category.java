@@ -54,4 +54,9 @@ public class Category {
 		this.colorCode = colorCode;
 	}
 
+	@Override
+	public String toString() {
+		return "Category [id=" + id + ", user=" + user + ", name=" + name + ", colorCode=" + colorCode + "]";
+	}
+
 }

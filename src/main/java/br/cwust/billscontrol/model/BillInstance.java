@@ -98,4 +98,11 @@ public class BillInstance {
 		this.paidValue = paidValue;
 	}
 
+	@Override
+	public String toString() {
+		return "BillInstance [id=" + id + ", billDefinition=" + billDefinition + ", recurrencePeriod="
+				+ recurrencePeriod + ", additionalInfo=" + additionalInfo + ", dueDate=" + dueDate + ", paidDate="
+				+ paidDate + ", value=" + value + ", paidValue=" + paidValue + "]";
+	}
+
 }
