@@ -24,9 +24,8 @@ public class CreateUserValidator implements BindingResultHandler {
 		}
 		
 		if (user.getEmail() != null && 
-				this.userRepository.findByEmail(user.getEmail()) != null) {
+				this.userRepository.findByEmail(user.getEmail()).isPresent()) {
 			addError(bindingResult,  "{user.already.exists.with.email}");
-		}
-		
+		}		
 	}
 }

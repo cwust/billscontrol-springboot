@@ -1,10 +1,8 @@
 package br.cwust.billscontrol.converter;
 
+import static br.cwust.billscontrol.test.TestUtils.assertBindingResultErrorAdded;
+import static br.cwust.billscontrol.test.TestUtils.assertNoBindingResultErrorsAdded;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,7 +50,7 @@ public class UserDtoToEntityConverterTest {
 		assertEquals(name, entity.getName());
 		assertEquals(UserRole.USER, entity.getRole());
 		assertEquals(SupportedLanguage.PT_BR, entity.getLanguage());
-		assertNoBindingResultErrorsAdded();
+		assertNoBindingResultErrorsAdded(bindingResult);
 	}
 
 	@Test
@@ -64,17 +62,7 @@ public class UserDtoToEntityConverterTest {
 		
 		userDtoToEntityConverter.convert(dto, bindingResult);
 		
-		assertBindingResultErrorAdded("user", "{user.role.invalid}");
-		assertBindingResultErrorAdded("user", "{user.language.invalid}");
-	}
-
-	public void assertNoBindingResultErrorsAdded() {
-		verify(bindingResult, never()).addError(any());
-	}
-	
-	public void assertBindingResultErrorAdded(String object, String message) {
-		verify(bindingResult).addError(argThat(objError -> 
-			objError.getObjectName().contentEquals(object) &&
-			objError.getDefaultMessage().contentEquals(message)));
+		assertBindingResultErrorAdded(bindingResult, "user", "{user.role.invalid}");
+		assertBindingResultErrorAdded(bindingResult, "user", "{user.language.invalid}");
 	}
 }
