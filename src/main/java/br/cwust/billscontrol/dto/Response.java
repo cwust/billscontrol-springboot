@@ -14,7 +14,7 @@ public class Response<T> {
 	}
 
 	public static <T> Response<T> success() {
-		return success(null);		
+		return success((T) null);		
 	}
 
 	public static <T> Response<T> success(T data) {
