@@ -14,6 +14,8 @@ import org.springframework.validation.BindingResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.cwust.billscontrol.util.BillsControlStringUtils;
+
 public class TestUtils {
 	public static void assertNoBindingResultErrorsAdded(BindingResult bindingResult) {
 		verify(bindingResult, never()).addError(any());
@@ -37,17 +39,9 @@ public class TestUtils {
 	}
 	
 	public static String longString(int numChars) {
-		return longString(numChars, "TEST ");
+		return BillsControlStringUtils.fillString(numChars, "TEST ");
 	}
 
-	public static String longString(int numChars, String pattern) {
-		StringBuilder sb = new StringBuilder();
-		while (sb.length() < numChars) {
-			sb.append(pattern);
-		}
-		return sb.substring(0, numChars - 1);
-	}
-	
 	public static ResultMatcher responseContainsMessage(String message) {
 		return jsonPath(String.format("$.messages[?(@.message=='%s')]", message)).exists();
 	}

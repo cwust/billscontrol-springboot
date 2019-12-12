@@ -1,22 +1,23 @@
 package br.cwust.billscontrol.services;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.BDDMockito;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import br.cwust.billscontrol.converters.UserCreateDtoToEntityConverter;
+import br.cwust.billscontrol.dto.UserCreateDto;
 import br.cwust.billscontrol.model.User;
 import br.cwust.billscontrol.repositories.UserRepository;
+import br.cwust.billscontrol.security.PasswordEncoder;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -25,51 +26,34 @@ public class UserServiceTest {
 
 	@MockBean
 	private UserRepository userRepository;
-	
+
+	@MockBean
+	private UserCreateDtoToEntityConverter userCreateDtoToEntityConverter;
+
+	@MockBean
+	private PasswordEncoder passwordEncoder;
+
 	@Autowired
 	private UserService userService;
 	
-	private User mockUser;
-	
-	@BeforeEach
-	public void init() {
-		this.mockUser = new User();
-	}
-	
 	@Test
-	public void testCreate() {
-		userService.createUser(mockUser);
-		
-		verify(userRepository).save(mockUser);
-	}
+	public void testCreateUser() {
+		String clearPassword = "CLEARPASSWORD";
+		String encodedPassword = "ENCODEDPASSWORD";
 
-	@Test
-	public void testUpdate() {
-		userService.createUser(mockUser);
-		
-		verify(userRepository).save(mockUser);
-	}
+		UserCreateDto user = new UserCreateDto();
+		User userEntity = new User();
+		userEntity.setPassword(clearPassword);
 
-	@Test
-	public void testFindByEmail() {
-		String email = "email@email.com";
+		given(userCreateDtoToEntityConverter.convert(user)).willReturn(userEntity);
+		given(passwordEncoder.encrypt(clearPassword)).willReturn(encodedPassword);
 		
-		BDDMockito.given(userRepository.findByEmail(email)).willReturn(Optional.of(mockUser));
+		userService.createUser(user);
+		ArgumentCaptor<User> argCaptor = ArgumentCaptor.forClass(User.class);
+		verify(userRepository).save(argCaptor.capture());
 		
-		Optional<User> userFindByEmail = userService.findByEmail(email);
-		
-		assertSame(mockUser, userFindByEmail.get());
+		User savedUser = argCaptor.getValue();
+		assertSame(userEntity, savedUser);
+		assertEquals(encodedPassword, savedUser.getPassword());
 	}
-	
-	@Test
-	public void testFindById() {
-		Long id = 123l;
-		
-		BDDMockito.given(userRepository.findById(id)).willReturn(Optional.of(mockUser));
-		
-		Optional<User> userFindByEmail = userService.findById(id);
-		
-		assertSame(mockUser, userFindByEmail.get());
-	}
-	
 }

@@ -16,10 +16,12 @@ import br.cwust.billscontrol.enums.UserRole;
 @Table(name = "user")
 public class User {
 	public static final int EMAIL_LENGTH = 100;
+	public static final int PASSWORD_LENGTH = 100;
 	public static final int NAME_LENGTH = 100;
 	
 	private Long id;
 	private String email;
+	private String password;
 	private String name;
 	private UserRole role;
 	private SupportedLanguage language;
@@ -41,6 +43,15 @@ public class User {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	@Column(name="password", nullable = false, length = PASSWORD_LENGTH)
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
 
 	@Column(name="name", nullable = false, length = NAME_LENGTH)
@@ -77,5 +88,4 @@ public class User {
 		return "User [id=" + id + ", email=" + email + ", name=" + name + ", role=" + role + ", language=" + language
 				+ "]";
 	}
-
 }

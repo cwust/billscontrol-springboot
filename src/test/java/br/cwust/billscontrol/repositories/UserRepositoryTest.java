@@ -31,6 +31,7 @@ public class UserRepositoryTest {
 	public void testSave() {
 		User user = new User();
 		user.setName("John Doe");
+		user.setPassword("password");
 		user.setEmail("john.doe@whatever.com");
 		user.setRole(UserRole.USER);
 
@@ -48,6 +49,7 @@ public class UserRepositoryTest {
 		User user = new User();
 		user.setName("John Doe");
 		user.setEmail(email);
+		user.setPassword("password");
 		user.setRole(UserRole.USER);
 
 		userRepository.save(user);

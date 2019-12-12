@@ -4,28 +4,34 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 
-import br.cwust.billscontrol.model.User;
+import br.cwust.billscontrol.dto.UserCreateDto;
+import br.cwust.billscontrol.enums.SupportedLanguage;
+import br.cwust.billscontrol.enums.UserRole;
 import br.cwust.billscontrol.repositories.UserRepository;
-import br.cwust.billscontrol.util.BindingResultHandler;
 
 @Component
-public class CreateUserValidator implements BindingResultHandler {
+public class CreateUserValidator extends AbstractValidator<UserCreateDto> {
 	@Autowired
 	private UserRepository userRepository;
 	
 	@Override
-	public String getTargetObject() {
+	public String getObjectName() {
 		return "user";
 	}
+	
+	@Override
+	public void validate(UserCreateDto user, BindingResult bindingResult) {
+		validateEnum(user.getRole(), UserRole.class, bindingResult, "{user.role.invalid}");
 
-	public void validate(User user, BindingResult bindingResult) {
-		if (user.getId() != null) {
-			addError(bindingResult,  "{user.cannot.create.with.id}");
-		}
+		validateEnum(user.getLanguage(), SupportedLanguage.class, bindingResult, "{user.language.invalid}");
 		
-		if (user.getEmail() != null && 
-				this.userRepository.findByEmail(user.getEmail()).isPresent()) {
-			addError(bindingResult,  "{user.already.exists.with.email}");
+		validateMailDoesNotExistYet(user, bindingResult);
+	}
+	
+	protected void validateMailDoesNotExistYet(UserCreateDto user, BindingResult bindingResult) {
+		if (user.getEmail() != null) {
+			boolean mailDoesNotExistYet = !this.userRepository.findByEmail(user.getEmail()).isPresent();
+			validateCondition(mailDoesNotExistYet, bindingResult, "{user.already.exists.with.email}");
 		}		
 	}
 }
