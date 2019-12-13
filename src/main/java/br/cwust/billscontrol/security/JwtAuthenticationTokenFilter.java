@@ -1,7 +1,6 @@
 package br.cwust.billscontrol.security;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -15,27 +14,24 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import br.cwust.billscontrol.model.User;
-import br.cwust.billscontrol.repositories.UserRepository;
-
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 	private static final String AUTH_HEADER = "Authorization";
 	private static final String BEARER_PREFIX = "Bearer ";
 	
 	@Autowired
 	private JwtTokenParser jwtTokenParser;
-
+	
 	@Autowired
-	private UserRepository userRepository;
+	private BillsControlUserDetailsService billsControlUserDetailsService;
 
 	@Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+			throws ServletException, IOException {
         String userEmail = getEmailFromValidToken(request);
-        
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-        	Optional<User> userOpt = userRepository.findByEmail(userEmail);
-        	if (userOpt.isPresent()) {
-        		setAuthenticationForUser(userOpt.get(), request);
+        	UserDetails userDetails = billsControlUserDetailsService.loadUserByUsername(userEmail);
+        	if (userDetails != null) {
+        		setAuthenticationForUserDetails(userDetails, request);
         	}
         }
         
@@ -60,11 +56,11 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         return jwtTokenParser.getUserEmailFromToken(token);
 	}
 	
-	private void setAuthenticationForUser(User user, HttpServletRequest request) {
-        UserDetails userDetails = BillsControlUserDetails.from(user);
-    	UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+	private void setAuthenticationForUserDetails(UserDetails userDetails, HttpServletRequest request) {
+		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
+				userDetails.getAuthorities());
+		authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+		SecurityContextHolder.getContext().setAuthentication(authentication);
 	}
 
 }

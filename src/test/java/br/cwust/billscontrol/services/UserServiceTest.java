@@ -8,8 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -17,7 +19,7 @@ import br.cwust.billscontrol.converters.UserCreateDtoToEntityConverter;
 import br.cwust.billscontrol.dto.UserCreateDto;
 import br.cwust.billscontrol.model.User;
 import br.cwust.billscontrol.repositories.UserRepository;
-import br.cwust.billscontrol.security.PasswordEncoder;
+import br.cwust.billscontrol.security.BillsControlPasswordEncoder;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -31,6 +33,7 @@ public class UserServiceTest {
 	private UserCreateDtoToEntityConverter userCreateDtoToEntityConverter;
 
 	@MockBean
+	@Qualifier("passwordEncoder")
 	private PasswordEncoder passwordEncoder;
 
 	@Autowired
@@ -46,7 +49,7 @@ public class UserServiceTest {
 		userEntity.setPassword(clearPassword);
 
 		given(userCreateDtoToEntityConverter.convert(user)).willReturn(userEntity);
-		given(passwordEncoder.encrypt(clearPassword)).willReturn(encodedPassword);
+		given(passwordEncoder.encode(clearPassword)).willReturn(encodedPassword);
 		
 		userService.createUser(user);
 		ArgumentCaptor<User> argCaptor = ArgumentCaptor.forClass(User.class);
