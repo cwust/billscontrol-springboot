@@ -1,4 +1,4 @@
-package br.cwust.billscontrol.security;
+package br.cwust.billscontrol.services;
 
 import java.util.Optional;
 
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import br.cwust.billscontrol.model.User;
 import br.cwust.billscontrol.repositories.UserRepository;
+import br.cwust.billscontrol.security.BillsControlUserDetails;
 
 @Service
 public class BillsControlUserDetailsService implements UserDetailsService{

@@ -1,4 +1,4 @@
-package br.cwust.billscontrol.security;
+package br.cwust.billscontrol.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +11,11 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import br.cwust.billscontrol.security.BillsControlPasswordEncoder;
+import br.cwust.billscontrol.security.JwtAuthenticationTokenFilter;
+import br.cwust.billscontrol.security.UnauthorizedEntryPoint;
+import br.cwust.billscontrol.services.BillsControlUserDetailsService;
 
 @Configuration
 @EnableWebSecurity

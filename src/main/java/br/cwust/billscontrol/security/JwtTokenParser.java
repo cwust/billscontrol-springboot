@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import br.cwust.billscontrol.date.DateUtils;
@@ -47,10 +49,12 @@ public class JwtTokenParser {
 				.compact();
 	}
 
-	public String createToken(User user) {
+	public String createToken(UserDetails userDetails) {
 		Map<String, Object> claims = new HashMap<>();
-		claims.put(CLAIM_KEY_USERNAME, user.getEmail());
-		claims.put(CLAIM_KEY_ROLE, user.getRole());
+		claims.put(CLAIM_KEY_USERNAME, userDetails.getUsername());
+		for (GrantedAuthority authority : userDetails.getAuthorities()) {
+			claims.put(CLAIM_KEY_ROLE, authority.getAuthority());
+		}
 		claims.put(CLAIM_KEY_CREATED, dateUtils.dateNow());
 
 		return createToken(claims);

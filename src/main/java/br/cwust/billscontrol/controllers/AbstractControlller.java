@@ -21,10 +21,6 @@ public abstract class AbstractControlller {
 		return ResponseEntity.badRequest().body(response);
 	}
 	
-	protected <T> ResponseEntity<Response<T>> success() {
-		return ResponseEntity.ok(Response.success());
-	}
-	
 	protected <T> ResponseEntity<Response<T>> proceedIfNoErrors(BindingResult bindingResult,
 			Supplier<ResponseEntity<Response<T>>> supplier) {
 		if (bindingResult.hasErrors()) {
@@ -34,4 +30,12 @@ public abstract class AbstractControlller {
 		}
 	}
 	
+	protected <T> ResponseEntity<Response<T>> success() {
+		return ResponseEntity.ok(Response.success());
+	}
+
+	protected <T> ResponseEntity<Response<T>> success(T data) {
+		return ResponseEntity.ok(Response.success(data));
+	}
+
 }
