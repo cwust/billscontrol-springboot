@@ -1,23 +1,10 @@
 package br.cwust.billscontrol.dto;
 
-import br.cwust.billscontrol.model.User;
-
 public class UserGetDto {
 	private String email;
 	private String name;
 	private String role;
 	private String language;
-
-	public static UserGetDto from(User user) {
-		UserGetDto dto = new UserGetDto();
-		
-		dto.setEmail(user.getEmail());
-		dto.setName(user.getName());
-		dto.setRole(user.getRole().toString());
-		dto.setLanguage(user.getLanguage().toString());
-		
-		return dto;
-	}
 
 	public String getEmail() {
 		return email;

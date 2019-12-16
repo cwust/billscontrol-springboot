@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.cwust.billscontrol.converters.UserCreateDtoToEntityConverter;
+import br.cwust.billscontrol.converters.UserEntityToGetDtoConverter;
 import br.cwust.billscontrol.dto.UserCreateDto;
 import br.cwust.billscontrol.dto.UserGetDto;
 import br.cwust.billscontrol.model.User;
@@ -26,7 +27,10 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private UserCreateDtoToEntityConverter userDtoToEntityConverter;
-	
+
+	@Autowired
+	private UserEntityToGetDtoConverter userEntityToGetDtoConverter;
+
 	@Override
 	public void createUser(UserCreateDto user) {
 		User userEntity = userDtoToEntityConverter.convert(user);
@@ -45,6 +49,6 @@ public class UserServiceImpl implements UserService {
 			throw new RuntimeException("Could not find current user in database!");
 		}
 		
-		return UserGetDto.from(userOpt.get());
+		return userEntityToGetDtoConverter.convert(userOpt.get());
 	}
 }
