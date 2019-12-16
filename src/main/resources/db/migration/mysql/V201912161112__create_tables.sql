@@ -1,8 +1,10 @@
 CREATE TABLE IF NOT EXISTS `user` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `email` VARCHAR(100) NOT NULL,
+  `password` VARCHAR(100),
   `name` VARCHAR(100) NOT NULL,
   `role` VARCHAR(45) NOT NULL,
+  `language` VARCHAR(20),
   PRIMARY KEY (`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC));

@@ -1,8 +1,9 @@
 package br.cwust.billscontrol.services;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
-import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +20,6 @@ import br.cwust.billscontrol.converters.UserCreateDtoToEntityConverter;
 import br.cwust.billscontrol.dto.UserCreateDto;
 import br.cwust.billscontrol.model.User;
 import br.cwust.billscontrol.repositories.UserRepository;
-import br.cwust.billscontrol.security.BillsControlPasswordEncoder;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest

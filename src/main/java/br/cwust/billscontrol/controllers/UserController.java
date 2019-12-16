@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.cwust.billscontrol.dto.Response;
 import br.cwust.billscontrol.dto.UserCreateDto;
+import br.cwust.billscontrol.dto.UserGetDto;
 import br.cwust.billscontrol.services.UserService;
 import br.cwust.billscontrol.validators.CreateUserValidator;
 
@@ -43,5 +45,14 @@ public class UserController extends AbstractControlller {
 			log.debug("user {} was successfully created", user);
 			return success();
 		});
+	}
+	
+	@GetMapping(path = "/current")
+	public ResponseEntity<Response<UserGetDto>> getCurrentUser() {
+		log.debug("getting current user {}");
+		
+		UserGetDto currentUser = userService.getCurrentUser();
+		
+		return success(currentUser);
 	}	
 }
