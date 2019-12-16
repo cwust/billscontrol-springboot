@@ -19,6 +19,8 @@ import br.cwust.billscontrol.enums.RecurrenceType;
 @Entity
 @Table(name = "bill_definition")
 public class BillDefinition {
+	public static final int NAME_LENGTH = 200;
+	
 	private Long id;
 	private User user;
 	private String name;
@@ -47,7 +49,7 @@ public class BillDefinition {
 		this.user = user;
 	}
 
-	@Column(name="name", nullable = false)
+	@Column(name="name", nullable = false, length = NAME_LENGTH)
 	public String getName() {
 		return name;
 	}

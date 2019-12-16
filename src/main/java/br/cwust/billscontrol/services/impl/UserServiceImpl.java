@@ -3,8 +3,6 @@ package br.cwust.billscontrol.services.impl;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +12,7 @@ import br.cwust.billscontrol.dto.UserCreateDto;
 import br.cwust.billscontrol.dto.UserGetDto;
 import br.cwust.billscontrol.model.User;
 import br.cwust.billscontrol.repositories.UserRepository;
+import br.cwust.billscontrol.security.CurrentUser;
 import br.cwust.billscontrol.services.UserService;
 
 @Service
@@ -25,6 +24,9 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	@Autowired
+	private CurrentUser currentUser;
+	
 	@Autowired
 	private UserCreateDtoToEntityConverter userDtoToEntityConverter;
 
@@ -41,9 +43,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public UserGetDto getCurrentUser() {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String email = authentication.getName();
-		Optional<User> userOpt = userRepository.findByEmail(email);
+		Optional<User> userOpt = userRepository.findByEmail(currentUser.getEmail());
 		
 		if (!userOpt.isPresent()) {
 			throw new RuntimeException("Could not find current user in database!");
