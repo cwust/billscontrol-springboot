@@ -41,7 +41,7 @@ public class UserControllerTest {
 	
 	@Test
 	@WithMockUser("TestUser")
-	public void testSuccess() throws Exception {
+	public void testCreateUserSuccess() throws Exception {
 		String name = "John Doe";
 		String email = "john.doe@test.com";
 		String language = "PT_BR";
@@ -60,13 +60,12 @@ public class UserControllerTest {
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(isSuccessResponse())
-			.andExpect(responseHasNoData())
-			.andDo(res -> System.out.println(res.getResponse().getContentAsString()));
+			.andExpect(responseHasNoData());
 	}
 	
 	@Test
 	@WithMockUser
-	public void testValidationErrors() throws Exception {
+	public void testCreateUserValidationErrors() throws Exception {
 		String name = longString(User.NAME_LENGTH+10);
 		String email = "invalid_email";
 
@@ -86,7 +85,6 @@ public class UserControllerTest {
 			.andExpect(responseContainsMessage("User name has maximum of 100 characters."))
 			.andExpect(responseContainsMessage("User role is required."))
 			.andExpect(responseContainsMessage("User language is required."))
-			.andExpect(responseContainsMessage("User password must have between 6 and 20 characters."))
-			.andDo(result -> System.out.println(result.getResponse().getContentAsString()));
+			.andExpect(responseContainsMessage("User password must have between 6 and 20 characters."));
 	}
 }

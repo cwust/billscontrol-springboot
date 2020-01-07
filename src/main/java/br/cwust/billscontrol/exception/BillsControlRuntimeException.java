@@ -1,4 +1,4 @@
-package br.cwust.billscontrol;
+package br.cwust.billscontrol.exception;
 
 public class BillsControlRuntimeException extends RuntimeException {
 

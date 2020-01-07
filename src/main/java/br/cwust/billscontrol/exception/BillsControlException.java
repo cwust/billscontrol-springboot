@@ -1,4 +1,4 @@
-package br.cwust.billscontrol;
+package br.cwust.billscontrol.exception;
 
 public abstract class BillsControlException extends Exception {
 

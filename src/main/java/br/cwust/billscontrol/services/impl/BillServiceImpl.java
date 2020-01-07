@@ -5,11 +5,11 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import br.cwust.billscontrol.BillsControlRuntimeException;
 import br.cwust.billscontrol.converters.BillCreateDtoToBillDefinitionConverter;
 import br.cwust.billscontrol.dto.BillCreateDto;
 import br.cwust.billscontrol.dto.CategoryDto;
 import br.cwust.billscontrol.enums.RecurrenceType;
+import br.cwust.billscontrol.exception.BillsControlRuntimeException;
 import br.cwust.billscontrol.model.BillDefinition;
 import br.cwust.billscontrol.model.Category;
 import br.cwust.billscontrol.repositories.BillDefinitionRepository;

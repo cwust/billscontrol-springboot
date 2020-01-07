@@ -9,6 +9,7 @@ import org.springframework.validation.BindingResult;
 
 import br.cwust.billscontrol.dto.Message;
 import br.cwust.billscontrol.dto.Response;
+import br.cwust.billscontrol.exception.MultiUserMessageException;
 
 public abstract class AbstractControlller {
 	protected <T> ResponseEntity<Response<T>> badRequestFromBindingResult(BindingResult bindingResult) {
@@ -20,13 +21,27 @@ public abstract class AbstractControlller {
 		
 		return ResponseEntity.badRequest().body(response);
 	}
-	
+
+	protected <T> ResponseEntity<Response<T>> badRequestFromMultiUserMessageException(MultiUserMessageException mume) {
+		List<Message> errorMessages = mume.getErrors().stream()
+				.map(error -> Message.error(error))
+				.collect(Collectors.toList());
+		
+		Response<T> response = Response.error(errorMessages);
+		
+		return ResponseEntity.badRequest().body(response);
+	}
+
 	protected <T> ResponseEntity<Response<T>> proceedIfNoErrors(BindingResult bindingResult,
 			Supplier<ResponseEntity<Response<T>>> supplier) {
 		if (bindingResult.hasErrors()) {
 			return badRequestFromBindingResult(bindingResult);
 		} else {
-			return supplier.get();
+			try {
+				return supplier.get();				
+			} catch (MultiUserMessageException mume) {
+				return badRequestFromMultiUserMessageException(mume);
+			}
 		}
 	}
 	
