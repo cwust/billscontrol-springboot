@@ -31,6 +31,10 @@ public class CategoryServiceImpl implements CategoryService {
 
 	@Override
 	public Category createCategory(CategoryDto dto) {
+		if (dto.getId() != null) {
+			throw new IllegalArgumentException("CategoryService.createCategory cannot create categories that already have an id");
+		}
+		
 		Category entity = categoryDtoToEntityConverter.convert(dto);
 		entity.setUser(currentUser.getUserEntity());
 		return categoryRepository.save(entity);		
