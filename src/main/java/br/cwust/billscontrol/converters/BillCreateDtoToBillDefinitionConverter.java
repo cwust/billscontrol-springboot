@@ -13,9 +13,6 @@ public class BillCreateDtoToBillDefinitionConverter {
 	@Autowired
 	private DateUtils dateUtils;
 	
-	@Autowired
-	private CategoryDtoToEntityConverter categoryDtoToEntityConverter;
-			
 	public BillDefinition convert(BillCreateDto dto) {
 		BillDefinition billDef = new BillDefinition();
 
@@ -23,7 +20,9 @@ public class BillCreateDtoToBillDefinitionConverter {
 		billDef.setDefaultValue(dto.getValue());
 		billDef.setStartDate(dateUtils.parseLocalDate(dto.getStartDate()));
 		billDef.setEndDate(dateUtils.parseLocalDate(dto.getStartDate()));
-		billDef.setCategory(categoryDtoToEntityConverter.convert(dto.getCategory()));
+		
+		//billDef.category and user will be dealt by the service
+		
 		billDef.setRecurrenceType(Enum.valueOf(RecurrenceType.class, dto.getRecurrenceType()));
 		
 		return billDef;

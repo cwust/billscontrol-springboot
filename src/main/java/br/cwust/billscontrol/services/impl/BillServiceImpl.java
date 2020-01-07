@@ -5,15 +5,17 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import br.cwust.billscontrol.BillsControlRuntimeException;
 import br.cwust.billscontrol.converters.BillCreateDtoToBillDefinitionConverter;
 import br.cwust.billscontrol.dto.BillCreateDto;
+import br.cwust.billscontrol.dto.CategoryDto;
 import br.cwust.billscontrol.enums.RecurrenceType;
 import br.cwust.billscontrol.model.BillDefinition;
 import br.cwust.billscontrol.model.Category;
 import br.cwust.billscontrol.repositories.BillDefinitionRepository;
-import br.cwust.billscontrol.repositories.CategoryRepository;
 import br.cwust.billscontrol.security.CurrentUser;
 import br.cwust.billscontrol.services.BillService;
+import br.cwust.billscontrol.services.CategoryService;
 
 @Service
 public class BillServiceImpl implements BillService {
@@ -23,9 +25,9 @@ public class BillServiceImpl implements BillService {
 
 	@Autowired
 	private CurrentUser currentUser;
-	
+
 	@Autowired
-	private CategoryRepository categoryRepository;
+	private CategoryService categoryService;
 
 	@Autowired
 	private BillDefinitionRepository billDefinitionRepository;
@@ -34,7 +36,7 @@ public class BillServiceImpl implements BillService {
 	public void createBill(BillCreateDto bill) {
 		BillDefinition billDef = billCreateDtoToBillDefinitionConverter.convert(bill);
 		billDef.setUser(currentUser.getUserEntity());
-		loadCategory(billDef);
+		billDef.setCategory(loadCategory(bill.getCategory()));
 		
 		if (billDef.getRecurrenceType() == RecurrenceType.ONCE) {
 			billDef.setEndDate(billDef.getStartDate());
@@ -43,21 +45,13 @@ public class BillServiceImpl implements BillService {
 		billDefinitionRepository.save(billDef);
 	}
 
-	private void loadCategory(BillDefinition billDef) {
-		if (billDef.getCategory().getId() == null) {
-			Category newCategory = billDef.getCategory();
-			newCategory.setUser(billDef.getUser());
-			Category savedCategory = categoryRepository.save(billDef.getCategory());
-			billDef.setCategory(savedCategory);
+	private Category loadCategory(CategoryDto dto) {
+		if (dto.getId() == null) {
+			return categoryService.createCategory(dto);
 		} else {
-			Long categoryId = billDef.getCategory().getId();
-			Long userId = billDef.getUser().getId();
-			Optional<Category> categoryOpt = categoryRepository.findByCategoryIdAndUserId(categoryId, userId);
-			if (categoryOpt.isPresent()) {
-				billDef.setCategory(categoryOpt.get());
-			} else {
-				throw new RuntimeException("Could not find category with id " + billDef.getCategory().getId());
-			}
+			Optional<Category> categoryOpt = categoryService.findCategoryForCurrentUser(dto.getId());
+			return categoryOpt
+					.orElseThrow(() -> new BillsControlRuntimeException("Could not find category with id " + dto.getId()));
 		}
 	}
 }

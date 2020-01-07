@@ -22,7 +22,7 @@ public class BillsControlUserDetailsService implements UserDetailsService{
 		if (userOpt.isPresent()) {
 			return BillsControlUserDetails.from(userOpt.get());
 		} else {
-			return null;
+			throw new UsernameNotFoundException(String.format("Could not find user %s", username));
 		}
 	}
 

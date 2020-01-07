@@ -60,6 +60,7 @@ public class BillCreateDto {
 		this.recurrenceType = recurrenceType;
 	}
 
+	@NotEmpty(message = "{bill.category.notempty}")
 	public CategoryDto getCategory() {
 		return category;
 	}
