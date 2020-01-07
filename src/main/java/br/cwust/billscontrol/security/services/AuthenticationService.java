@@ -1,4 +1,4 @@
-package br.cwust.billscontrol.services;
+package br.cwust.billscontrol.security.services;
 
 import br.cwust.billscontrol.dto.CredentialsDto;
 import br.cwust.billscontrol.exception.MultiUserMessageException;

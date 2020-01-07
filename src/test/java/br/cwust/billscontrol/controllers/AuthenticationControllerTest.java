@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import br.cwust.billscontrol.dto.CredentialsDto;
-import br.cwust.billscontrol.services.AuthenticationService;
+import br.cwust.billscontrol.security.services.AuthenticationService;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest

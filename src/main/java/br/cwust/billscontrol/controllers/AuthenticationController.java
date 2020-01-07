@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.cwust.billscontrol.dto.CredentialsDto;
 import br.cwust.billscontrol.dto.Response;
-import br.cwust.billscontrol.services.AuthenticationService;
+import br.cwust.billscontrol.security.services.AuthenticationService;
 
 @RestController
 @RequestMapping("/api/auth")

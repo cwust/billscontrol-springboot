@@ -1,4 +1,4 @@
-package br.cwust.billscontrol.services.impl;
+package br.cwust.billscontrol.security.services.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import br.cwust.billscontrol.dto.CredentialsDto;
 import br.cwust.billscontrol.exception.MultiUserMessageException;
 import br.cwust.billscontrol.security.JwtTokenParser;
-import br.cwust.billscontrol.services.AuthenticationService;
+import br.cwust.billscontrol.security.services.AuthenticationService;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService{
