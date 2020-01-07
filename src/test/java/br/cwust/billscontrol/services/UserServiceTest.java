@@ -1,7 +1,7 @@
 package br.cwust.billscontrol.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -18,10 +18,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import br.cwust.billscontrol.converters.UserCreateDtoToEntityConverter;
-import br.cwust.billscontrol.converters.UserEntityToGetDtoConverter;
 import br.cwust.billscontrol.dto.UserCreateDto;
 import br.cwust.billscontrol.dto.UserGetDto;
+import br.cwust.billscontrol.enums.SupportedLanguage;
+import br.cwust.billscontrol.enums.UserRole;
 import br.cwust.billscontrol.model.User;
 import br.cwust.billscontrol.repositories.UserRepository;
 import br.cwust.billscontrol.security.CurrentUser;
@@ -31,14 +31,13 @@ import br.cwust.billscontrol.security.CurrentUser;
 @ActiveProfiles("test")
 public class UserServiceTest {
 
-	@MockBean
-	private UserRepository userRepository;
+	public static final String USER_EMAIL = "email@email.com";
+	public static final String USER_NAME = "John  Doe";
+	public static final UserRole USER_ROLE = UserRole.USER;
+	public static final SupportedLanguage USER_LANGUAGE = SupportedLanguage.EN;
 
 	@MockBean
-	private UserCreateDtoToEntityConverter userCreateDtoToEntityConverter;
-	
-	@MockBean
-	private UserEntityToGetDtoConverter userEntityToGetDtoConverter;  
+	private UserRepository userRepository;
 
 	@MockBean
 	@Qualifier("passwordEncoder")
@@ -52,42 +51,47 @@ public class UserServiceTest {
 	
 	@Test
 	public void testCreateUser() {
-		String clearPassword = "CLEARPASSWORD";
+		String rawPassword = "RAWPASSWORD";
 		String encodedPassword = "ENCODEDPASSWORD";
 
-		UserCreateDto user = new UserCreateDto();
-		User userEntity = new User();
-		userEntity.setPassword(clearPassword);
-
-		given(userCreateDtoToEntityConverter.convert(user)).willReturn(userEntity);
-		given(passwordEncoder.encode(clearPassword)).willReturn(encodedPassword);
+		UserCreateDto dto = new UserCreateDto();
+		dto.setEmail(USER_EMAIL);
+		dto.setName(USER_NAME);
+		dto.setPassword(rawPassword);
+		dto.setRole(USER_ROLE.toString());		
+		dto.setLanguage(USER_LANGUAGE.toString());
 		
-		userService.createUser(user);
+		given(passwordEncoder.encode(rawPassword)).willReturn(encodedPassword);
+		
+		userService.createUser(dto);
 		ArgumentCaptor<User> argCaptor = ArgumentCaptor.forClass(User.class);
 		verify(userRepository).save(argCaptor.capture());
 		
 		User savedUser = argCaptor.getValue();
-		assertSame(userEntity, savedUser);
+		assertEquals(USER_EMAIL, savedUser.getEmail());
 		assertEquals(encodedPassword, savedUser.getPassword());
+		assertEquals(USER_NAME, savedUser.getName());
+		assertEquals(USER_ROLE, savedUser.getRole());
+		assertEquals(USER_LANGUAGE, savedUser.getLanguage());		
 	}
 	
 	@Test
 	public void testGetCurrentUser() {
-		String email = "email@email.com";
-		
 		User entity = new User();
-		entity.setEmail(email);
-
-		UserGetDto dto = new UserGetDto();
-		dto.setEmail(email);
-
-		given(currentUser.getEmail()).willReturn(email);
-		given(userRepository.findByEmail(email)).willReturn(Optional.of(entity));
-		given(userEntityToGetDtoConverter.convert(entity)).willReturn(dto);
+		entity.setEmail(USER_EMAIL);
+		entity.setName(USER_NAME);
+		entity.setRole(USER_ROLE);
+		entity.setLanguage(USER_LANGUAGE);
+		
+		given(currentUser.getEmail()).willReturn(USER_EMAIL);
+		given(userRepository.findByEmail(USER_EMAIL)).willReturn(Optional.of(entity));
 		
 		UserGetDto result = userService.getCurrentUser();
 		
-		assertSame(dto, result);		
+		assertNotNull(result);
+		assertEquals(USER_EMAIL, result.getEmail());
+		assertEquals(USER_NAME, result.getName());
+		assertEquals(USER_ROLE.toString(), result.getRole());
+		assertEquals(USER_LANGUAGE.toString(), result.getLanguage());		
 	}
-	
 }
