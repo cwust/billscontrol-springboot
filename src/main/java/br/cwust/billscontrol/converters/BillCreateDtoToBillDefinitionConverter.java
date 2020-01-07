@@ -19,7 +19,7 @@ public class BillCreateDtoToBillDefinitionConverter {
 		billDef.setName(dto.getName());
 		billDef.setDefaultValue(dto.getValue());
 		billDef.setStartDate(dateUtils.parseLocalDate(dto.getStartDate()));
-		billDef.setEndDate(dateUtils.parseLocalDate(dto.getStartDate()));
+		billDef.setEndDate(dateUtils.parseLocalDate(dto.getEndDate()));
 		
 		//billDef.category and user will be dealt by the service
 		
