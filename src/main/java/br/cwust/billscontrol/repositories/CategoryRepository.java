@@ -13,5 +13,5 @@ public interface CategoryRepository extends JpaRepository<Category, Long>{
 					+ " FROM Category cat "
 					+ " WHERE cat.id = :categoryId "
 					+ "   AND (cat.user IS NULL OR cat.user.email = :userEmail)")
-	Optional<Category> getByIdAndUserEmailWithAccess(@Param("categoryId") Long categoryId, @Param("userEmail") String userEmail);
+	Optional<Category> findByIdAndUserEmailWithAccess(@Param("categoryId") Long categoryId, @Param("userEmail") String userEmail);
 }

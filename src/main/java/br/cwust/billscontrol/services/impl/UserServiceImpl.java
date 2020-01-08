@@ -34,11 +34,11 @@ public class UserServiceImpl implements UserService {
 	private UserEntityToGetDtoConverter userEntityToGetDtoConverter;
 
 	@Override
-	public void createUser(UserCreateDto user) {
+	public User createUser(UserCreateDto user) {
 		User userEntity = userDtoToEntityConverter.convert(user);
 		String encodedPassword = this.passwordEncoder.encode(userEntity.getPassword());
 		userEntity.setPassword(encodedPassword);
-		this.userRepository.save(userEntity);
+		return this.userRepository.save(userEntity);
 	}
 
 	@Override

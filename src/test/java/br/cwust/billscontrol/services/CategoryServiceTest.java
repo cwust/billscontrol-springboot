@@ -22,6 +22,7 @@ import br.cwust.billscontrol.model.Category;
 import br.cwust.billscontrol.model.User;
 import br.cwust.billscontrol.repositories.CategoryRepository;
 import br.cwust.billscontrol.security.CurrentUser;
+import br.cwust.billscontrol.test.TestUtils;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -45,7 +46,7 @@ public class CategoryServiceTest {
 		Category category = new Category();
 		
 		given(currentUser.getEmail()).willReturn(userEmail);
-		given(categoryRepository.getByIdAndUserEmailWithAccess(categoryId, userEmail)).willReturn(Optional.of(category));
+		given(categoryRepository.findByIdAndUserEmailWithAccess(categoryId, userEmail)).willReturn(Optional.of(category));
 		
 		Optional<Category> result = categoryService.findCategoryForCurrentUser(categoryId);
 		
@@ -61,7 +62,7 @@ public class CategoryServiceTest {
 		
 		User user = new User();
 		given(currentUser.getUserEntity()).willReturn(user);
-		given(categoryRepository.save(any())).will(answer -> answer.getArgument(0));
+		TestUtils.mockRepositorySave(categoryRepository);
 		
 		Category result = categoryService.createCategory(dto);
 		

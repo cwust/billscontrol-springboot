@@ -10,6 +10,8 @@ import static org.mockito.Mockito.verify;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +27,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import br.cwust.billscontrol.dto.BillCreateDto;
+import br.cwust.billscontrol.dto.BillListItemDto;
 import br.cwust.billscontrol.dto.CategoryDto;
 import br.cwust.billscontrol.enums.RecurrenceType;
 import br.cwust.billscontrol.model.BillDefinition;
@@ -32,6 +35,7 @@ import br.cwust.billscontrol.model.Category;
 import br.cwust.billscontrol.model.User;
 import br.cwust.billscontrol.repositories.BillDefinitionRepository;
 import br.cwust.billscontrol.security.CurrentUser;
+import br.cwust.billscontrol.test.TestUtils;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -69,8 +73,20 @@ public class BillServiceTest {
 		mockUser.setId(USER_ID);
 		mockUser.setEmail(USER_EMAIL);
 		given(currentUser.getUserEntity()).willReturn(mockUser);
+		given(currentUser.getEmail()).willReturn(USER_EMAIL);
 	}
-	
+
+	private BillCreateDto createMockBillCreateDto() {
+		BillCreateDto dto = new BillCreateDto();
+
+		dto.setName(BILL_NAME);
+		dto.setValue(BILL_VALUE);
+		dto.setStartDate(BILL_START_DATE);
+		dto.setCategory(new CategoryDto());
+		
+		return dto;
+	}
+
 	@Test
 	public void testBillRecurrenceOnceNewCategory() {
 		RecurrenceType recurrence = RecurrenceType.ONCE;
@@ -80,8 +96,9 @@ public class BillServiceTest {
 		
 		Category categoryEntity = new Category();
 		given(categoryService.createCategory(billCreateDto.getCategory())).willReturn(categoryEntity);
+		TestUtils.mockRepositorySave(billDefinitionRepository);
 		
-		billService.createBill(billCreateDto);
+		BillDefinition result = billService.createBill(billCreateDto);
 
 		ArgumentCaptor<BillDefinition> argCaptorSaveBillDef = ArgumentCaptor.forClass(BillDefinition.class);
 		verify(billDefinitionRepository).save(argCaptorSaveBillDef.capture());
@@ -92,6 +109,7 @@ public class BillServiceTest {
 		assertEquals(LocalDate.parse(BILL_START_DATE), savedBillDef.getStartDate());
 		assertEquals(LocalDate.parse(BILL_START_DATE), savedBillDef.getEndDate()); //ONCE bills start and end on the same date
 		assertSame(categoryEntity, savedBillDef.getCategory());
+		assertSame(savedBillDef, result);
 	}	
 
 	@Test
@@ -105,8 +123,9 @@ public class BillServiceTest {
 
 		Category categoryEntity = new Category();
 		given(categoryService.findCategoryForCurrentUser(categoryId)).willReturn(Optional.of(categoryEntity));
+		TestUtils.mockRepositorySave(billDefinitionRepository);
 				
-		billService.createBill(billCreateDto);
+		BillDefinition result = billService.createBill(billCreateDto);
 
 		verify(categoryService, never()).createCategory(any());
 		
@@ -119,16 +138,89 @@ public class BillServiceTest {
 		assertEquals(LocalDate.parse(BILL_START_DATE), savedBillDef.getStartDate());
 		assertNull(savedBillDef.getEndDate());
 		assertSame(categoryEntity, savedBillDef.getCategory());
+		assertSame(savedBillDef, result);
 	}
 	
-	private BillCreateDto createMockBillCreateDto() {
-		BillCreateDto dto = new BillCreateDto();
-
-		dto.setName(BILL_NAME);
-		dto.setValue(BILL_VALUE);
-		dto.setStartDate(BILL_START_DATE);
-		dto.setCategory(new CategoryDto());
+	private BillDefinition createBillDefinition(Long id, String name, String defaultValue, Long categoryId) {
+		BillDefinition billDef = new BillDefinition();
 		
-		return dto;
+		billDef.setId(id);
+		billDef.setName(name);
+		billDef.setDefaultValue(new BigDecimal(defaultValue));
+		
+		Category category = new Category();
+		category.setId(categoryId);
+		category.setName("Category " + categoryId);
+		billDef.setCategory(category);
+		
+		return billDef;
+	}
+	
+	@Test
+	public void testGetBillsInMonth() {
+		final int year = 2020;
+		final int month = 1;
+		
+		final LocalDate expectedPeriodStart = LocalDate.of(2020, 1, 1);
+		final LocalDate expectedPeriodEnd = LocalDate.of(2020, 2, 1);
+		
+		final long idBill1 = 111l;
+		final String nameBill1 = "Bill 1";
+		final String valueBill1 = "100.0";
+		
+		final long idBill2 = 222l;
+		final String nameBill2 = "Bill 2";
+		final String valueBill2 = "200.0";
+		
+		final long idBill3 = 333l;
+		final String nameBill3 = "Bill 3";
+		final String valueBill3 = "300.0";
+	
+		final Long defaultCategoryId = 1010l;
+		
+		given(
+				billDefinitionRepository.findByUserEmailAndPeriod(mockUser.getEmail(), expectedPeriodStart, expectedPeriodEnd))
+		.willReturn(
+				Arrays.asList(
+						createBillDefinition(idBill1, nameBill1, valueBill1, defaultCategoryId),
+						createBillDefinition(idBill2, nameBill2, valueBill2, defaultCategoryId),
+						createBillDefinition(idBill3, nameBill3, valueBill3, defaultCategoryId)));
+		
+		List<BillListItemDto> result = billService.getBillsInMonth(year, month);
+		
+		assertBillListItemDto(result.get(0), 
+				idBill1, 
+				nameBill1, 
+				valueBill1, 
+				null, 
+				defaultCategoryId,
+				null);
+
+		assertBillListItemDto(result.get(1), 
+				idBill2, 
+				nameBill2, 
+				valueBill2, 
+				null, 
+				defaultCategoryId,
+				null);
+
+		assertBillListItemDto(result.get(2), 
+				idBill3, 
+				nameBill3, 
+				valueBill3, 
+				null, 
+				defaultCategoryId,
+				null);
+
+		assertEquals(3, result.size());
+	}
+	
+	private void assertBillListItemDto(BillListItemDto dto, Long id, String name, String value, String date, Long categoryId, Boolean isPaid) {
+		assertEquals(id, dto.getId());
+		assertEquals(name, dto.getName());
+		assertEquals(new BigDecimal(value), dto.getValue());
+		//assertEquals(date, dto.getDate());
+		assertEquals(categoryId, dto.getCategory().getId());
+		assertEquals(isPaid, dto.getIsPaid());
 	}
 }

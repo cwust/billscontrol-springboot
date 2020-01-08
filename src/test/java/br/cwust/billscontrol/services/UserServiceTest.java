@@ -2,6 +2,7 @@ package br.cwust.billscontrol.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -25,6 +26,7 @@ import br.cwust.billscontrol.enums.UserRole;
 import br.cwust.billscontrol.model.User;
 import br.cwust.billscontrol.repositories.UserRepository;
 import br.cwust.billscontrol.security.CurrentUser;
+import br.cwust.billscontrol.test.TestUtils;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -62,8 +64,9 @@ public class UserServiceTest {
 		dto.setLanguage(USER_LANGUAGE.toString());
 		
 		given(passwordEncoder.encode(rawPassword)).willReturn(encodedPassword);
+		TestUtils.mockRepositorySave(userRepository);
 		
-		userService.createUser(dto);
+		User result = userService.createUser(dto);
 		ArgumentCaptor<User> argCaptor = ArgumentCaptor.forClass(User.class);
 		verify(userRepository).save(argCaptor.capture());
 		
@@ -72,7 +75,8 @@ public class UserServiceTest {
 		assertEquals(encodedPassword, savedUser.getPassword());
 		assertEquals(USER_NAME, savedUser.getName());
 		assertEquals(USER_ROLE, savedUser.getRole());
-		assertEquals(USER_LANGUAGE, savedUser.getLanguage());		
+		assertEquals(USER_LANGUAGE, savedUser.getLanguage());
+		assertSame(savedUser, result);
 	}
 	
 	@Test

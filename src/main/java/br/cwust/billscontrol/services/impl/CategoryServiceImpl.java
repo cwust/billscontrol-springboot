@@ -26,7 +26,7 @@ public class CategoryServiceImpl implements CategoryService {
 	
 	@Override
 	public Optional<Category> findCategoryForCurrentUser(Long categoryId) {
-		return categoryRepository.getByIdAndUserEmailWithAccess(categoryId, currentUser.getEmail());
+		return categoryRepository.findByIdAndUserEmailWithAccess(categoryId, currentUser.getEmail());
 	}
 
 	@Override
