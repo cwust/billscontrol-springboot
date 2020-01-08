@@ -1,11 +1,15 @@
 package br.cwust.billscontrol.repositories;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,11 +50,16 @@ public class BillDefinitionRepositoryTest {
 
 	@BeforeEach
 	private void init() {
-		billDefinitionRepository.deleteAll();
-		userRepository.deleteAll();
 		this.user1 = createUser("User 1");
 		this.user2 = createUser("User 2");
 		this.category = createCategory("Default Category");
+	}
+	
+	@AfterEach
+	private void cleanup() {
+		billDefinitionRepository.deleteAll();
+		userRepository.deleteAll();
+		categoryRepository.deleteAll();
 	}
 	
 	private User createUser(String name) {
@@ -84,9 +93,9 @@ public class BillDefinitionRepositoryTest {
 	
 	@SuppressWarnings("unused")
 	@Test
-	public void findByUserAndPeriod() {
+	public void testFindByUserAndPeriod() {
 		LocalDate periodStart = LocalDate.parse("2020-01-01");
-		LocalDate periodEnd = LocalDate.parse("2020-02-01");
+		LocalDate periodEnd = LocalDate.parse("2020-01-31");
 
 		//Bill without recurrence, within period
 		BillDefinition billDef1 = createBillDefinition(this.user1, "Bill 1", "100.0", "2020-01-08", "2020-01-08", RecurrenceType.ONCE);
@@ -149,4 +158,23 @@ public class BillDefinitionRepositoryTest {
 		assertEquals(billDef16.getId(), result.get(8).getId());
 		assertEquals(9, result.size());
 	}	
+	
+	@Test
+	public void testFindByIdAndUserEmailOk() {
+		BillDefinition billDef1 = createBillDefinition(this.user1, "Bill 1", "100.0", "2020-01-08", "2020-01-08", RecurrenceType.ONCE);
+		
+		Optional<BillDefinition> result1 = billDefinitionRepository.findByIdAndUserEmail(billDef1.getId(), user1.getEmail());
+		assertTrue(result1.isPresent());
+		assertEquals(billDef1.getId(), result1.get().getId());
+	}
+	
+	@Test
+	public void testFindByIdAndUserEmailOtherUser() {
+		BillDefinition billDef1 = createBillDefinition(this.user1, "Bill 1", "100.0", "2020-01-08", "2020-01-08", RecurrenceType.ONCE);
+		
+		Optional<BillDefinition> result1 = billDefinitionRepository.findByIdAndUserEmail(billDef1.getId(), user2.getEmail());
+		assertFalse(result1.isPresent());
+	}
+	
+
 }

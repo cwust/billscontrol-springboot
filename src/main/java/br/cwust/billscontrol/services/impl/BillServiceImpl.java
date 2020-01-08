@@ -1,7 +1,6 @@
 package br.cwust.billscontrol.services.impl;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -10,12 +9,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.cwust.billscontrol.converters.BillCreateDtoToBillDefinitionConverter;
+import br.cwust.billscontrol.converters.BillDefinitionToBillDetailsDtoConverter;
 import br.cwust.billscontrol.converters.BillDefinitionToBillListItemDtoConverter;
+import br.cwust.billscontrol.date.DateUtils;
+import br.cwust.billscontrol.date.TimePeriod;
 import br.cwust.billscontrol.dto.BillCreateDto;
+import br.cwust.billscontrol.dto.BillDetailsDto;
 import br.cwust.billscontrol.dto.BillListItemDto;
 import br.cwust.billscontrol.dto.CategoryDto;
 import br.cwust.billscontrol.enums.RecurrenceType;
 import br.cwust.billscontrol.exception.BillsControlRuntimeException;
+import br.cwust.billscontrol.exception.MultiUserMessageException;
 import br.cwust.billscontrol.model.BillDefinition;
 import br.cwust.billscontrol.model.Category;
 import br.cwust.billscontrol.repositories.BillDefinitionRepository;
@@ -32,6 +36,12 @@ public class BillServiceImpl implements BillService {
 	@Autowired
 	private BillDefinitionToBillListItemDtoConverter billDefinitionToBillListItemDtoConverter;
 	
+	@Autowired
+	private BillDefinitionToBillDetailsDtoConverter billDefinitionToBillDetailsDtoConverter;
+
+	@Autowired
+	private DateUtils dateUtils;
+
 	@Autowired
 	private CurrentUser currentUser;
 
@@ -66,15 +76,64 @@ public class BillServiceImpl implements BillService {
 
 	@Override
 	public List<BillListItemDto> getBillsInMonth(int year, int month) {
-		LocalDate periodStart = LocalDate.of(year, month, 1);
-		LocalDate periodEnd = periodStart.plus(1, ChronoUnit.MONTHS);
+		TimePeriod period = TimePeriod.forMonth(year, month);
 		
-		List<BillDefinition> billDefinitions = billDefinitionRepository.findByUserEmailAndPeriod(currentUser.getEmail(), periodStart, periodEnd);
+		List<BillDefinition> billDefinitions = billDefinitionRepository.findByUserEmailAndPeriod(currentUser.getEmail(),
+				period.getStart(), period.getEnd());
 		
 		List<BillListItemDto> listItems = billDefinitions.stream()
 			.map(billDefinitionToBillListItemDtoConverter::convert)
 			.collect(Collectors.toList());
 		
 		return listItems;
+	}
+
+	@Override
+	public BillDetailsDto getBillDetails(Long billDefId, int year, int month) {
+		Optional<BillDefinition> billDefOpt = billDefinitionRepository.findByIdAndUserEmail(billDefId, currentUser.getEmail());
+		
+		if (!billDefOpt.isPresent()) {
+			throw new MultiUserMessageException(String.format("There is no bill with id %d for user %s", billDefId, currentUser.getEmail()));
+		}
+		
+		BillDefinition billDef = billDefOpt.get(); 
+		
+		TimePeriod billDefVigency = new TimePeriod(billDef.getStartDate(), billDef.getEndDate());
+		TimePeriod monthPeriod = TimePeriod.forMonth(year, month);
+		
+		if (!billDefVigency.periodsOverlap(monthPeriod)) {
+			throw new MultiUserMessageException(String.format("Bill no longer exists in month %d-%d", year, month));
+		}
+		
+		BillDetailsDto response = billDefinitionToBillDetailsDtoConverter.convert(billDef);
+		
+		response.setRecurrencePeriod(getRecurrencePeriod(billDef.getRecurrenceType(), year, month));
+
+		LocalDate defaultDueDate = getDefaultDueDate(billDef.getRecurrenceType(), billDef.getStartDate(), year, month);
+		response.setDueDate(dateUtils.format(defaultDueDate));
+		
+		return response;
+	}
+	
+	Integer getRecurrencePeriod(RecurrenceType recurrenceType, int year, int month) {
+		switch (recurrenceType) {
+		case ONCE:
+			return null;
+		case MONTHLY:
+			return (year * 12) + month;
+		default:
+			throw new IllegalArgumentException("No recurrence period defined for recurrenceType " + recurrenceType);
+		}
+	}
+	
+	LocalDate getDefaultDueDate(RecurrenceType recurrenceType, LocalDate baseDate, int year, int month) {
+		switch (recurrenceType) {
+		case ONCE:
+			return baseDate;
+		case MONTHLY:
+			return baseDate.withYear(year).withMonth(month);
+		default:
+			throw new IllegalArgumentException("No defaultDueDate defined for recurrenceType " + recurrenceType);
+		}	
 	}
 }

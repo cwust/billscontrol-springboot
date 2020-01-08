@@ -2,6 +2,7 @@ package br.cwust.billscontrol.repositories;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,10 +14,12 @@ public interface BillDefinitionRepository extends JpaRepository<BillDefinition, 
 	@Query(" SELECT billDef "
 			+ " FROM BillDefinition billDef "
 			+ " WHERE billDef.user.email = :userEmail"
-			+ "   AND billDef.startDate < :periodEnd "
+			+ "   AND billDef.startDate <= :periodEnd "
 			+ "   AND (billDef.endDate IS NULL OR billDef.endDate >= :periodStart) "
 			+ " ORDER BY "
 			+ "   billDef.id ")
 	List<BillDefinition> findByUserEmailAndPeriod(@Param("userEmail") String userEmail, @Param("periodStart") LocalDate periodStart,
-			@Param("periodEnd") LocalDate periodEnd);	
+			@Param("periodEnd") LocalDate periodEnd);
+	
+	Optional<BillDefinition> findByIdAndUserEmail(@Param("id") Long id, @Param("userEmail") String userEmail);
 }

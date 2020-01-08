@@ -3,6 +3,7 @@ package br.cwust.billscontrol.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -27,9 +28,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import br.cwust.billscontrol.dto.BillCreateDto;
+import br.cwust.billscontrol.dto.BillDetailsDto;
 import br.cwust.billscontrol.dto.BillListItemDto;
 import br.cwust.billscontrol.dto.CategoryDto;
 import br.cwust.billscontrol.enums.RecurrenceType;
+import br.cwust.billscontrol.exception.MultiUserMessageException;
 import br.cwust.billscontrol.model.BillDefinition;
 import br.cwust.billscontrol.model.Category;
 import br.cwust.billscontrol.model.User;
@@ -65,11 +68,9 @@ public class BillServiceTest {
 	@Autowired
 	private BillService billService;
 
-	private User mockUser;
-
 	@BeforeEach
 	public void init() {
-		mockUser = new User();
+		User mockUser = new User();
 		mockUser.setId(USER_ID);
 		mockUser.setEmail(USER_EMAIL);
 		given(currentUser.getUserEntity()).willReturn(mockUser);
@@ -140,8 +141,13 @@ public class BillServiceTest {
 		assertSame(categoryEntity, savedBillDef.getCategory());
 		assertSame(savedBillDef, result);
 	}
-	
+
 	private BillDefinition createBillDefinition(Long id, String name, String defaultValue, Long categoryId) {
+		return createBillDefinition(id, name, defaultValue, categoryId, null, null, null);
+	}
+
+	private BillDefinition createBillDefinition(Long id, String name, String defaultValue, Long categoryId,
+			LocalDate startDate, LocalDate endDate, RecurrenceType recurrenceType) {
 		BillDefinition billDef = new BillDefinition();
 		
 		billDef.setId(id);
@@ -153,6 +159,10 @@ public class BillServiceTest {
 		category.setName("Category " + categoryId);
 		billDef.setCategory(category);
 		
+		billDef.setStartDate(startDate);
+		billDef.setEndDate(endDate);
+		billDef.setRecurrenceType(recurrenceType);
+		
 		return billDef;
 	}
 	
@@ -162,7 +172,7 @@ public class BillServiceTest {
 		final int month = 1;
 		
 		final LocalDate expectedPeriodStart = LocalDate.of(2020, 1, 1);
-		final LocalDate expectedPeriodEnd = LocalDate.of(2020, 2, 1);
+		final LocalDate expectedPeriodEnd = LocalDate.of(2020, 1, 31);
 		
 		final long idBill1 = 111l;
 		final String nameBill1 = "Bill 1";
@@ -179,7 +189,7 @@ public class BillServiceTest {
 		final Long defaultCategoryId = 1010l;
 		
 		given(
-				billDefinitionRepository.findByUserEmailAndPeriod(mockUser.getEmail(), expectedPeriodStart, expectedPeriodEnd))
+				billDefinitionRepository.findByUserEmailAndPeriod(USER_EMAIL, expectedPeriodStart, expectedPeriodEnd))
 		.willReturn(
 				Arrays.asList(
 						createBillDefinition(idBill1, nameBill1, valueBill1, defaultCategoryId),
@@ -222,5 +232,107 @@ public class BillServiceTest {
 		//assertEquals(date, dto.getDate());
 		assertEquals(categoryId, dto.getCategory().getId());
 		assertEquals(isPaid, dto.getIsPaid());
+	}
+
+	@Test
+	public void testGetBillDetailsBillOnceExists() {
+		final Long idBill = 313l;
+		final int year = 2020;
+		final int month = 1;
+		
+		final String nameBill = "Bill X";
+		final String valueBill = "100.0";
+		final Long defaultCategoryId = 3312l;
+		final LocalDate dateBill = LocalDate.of(2020, 1, 8);
+		
+		BillDefinition billDef = createBillDefinition(idBill, nameBill, valueBill, defaultCategoryId, dateBill, dateBill, RecurrenceType.ONCE);
+
+		given(
+				billDefinitionRepository.findByIdAndUserEmail(idBill, USER_EMAIL))
+		.willReturn(
+				Optional.of(billDef));
+		
+		
+		BillDetailsDto result = billService.getBillDetails(idBill, year, month);
+		
+		assertEquals(idBill, result.getId());
+		assertEquals("2020-01-08", result.getDueDate());
+		assertEquals(RecurrenceType.ONCE.toString(), result.getRecurrenceType());
+		assertEquals(new BigDecimal(valueBill), result.getValue());
+		assertEquals(defaultCategoryId, result.getCategory().getId());
+		
+		assertNull(result.getAdditionalInfo());
+		assertNull(result.getPaidDate());
+		assertNull(result.getPaidValue());
+		assertNull(result.getRecurrencePeriod());
+	}
+	
+	@Test
+	public void testGetBillDetailsBillMonthlyExists() {
+		final Long idBill = 313l;
+		final int year = 2020;
+		final int month = 1;
+		
+		final String nameBill = "Bill X";
+		final String valueBill = "100.0";
+		final Long defaultCategoryId = 3312l;
+		final LocalDate dateStartBill = LocalDate.of(2019, 10, 8);
+		
+		BillDefinition billDef = createBillDefinition(idBill, nameBill, valueBill, defaultCategoryId, dateStartBill, null, RecurrenceType.MONTHLY);
+
+		given(
+				billDefinitionRepository.findByIdAndUserEmail(idBill, USER_EMAIL))
+		.willReturn(
+				Optional.of(billDef));
+		
+		
+		BillDetailsDto result = billService.getBillDetails(idBill, year, month);
+		
+		assertEquals(idBill, result.getId());
+		assertEquals("2020-01-08", result.getDueDate());
+		assertEquals(RecurrenceType.MONTHLY.toString(), result.getRecurrenceType());
+		assertEquals(new BigDecimal(valueBill), result.getValue());
+		assertEquals(defaultCategoryId, result.getCategory().getId());
+		assertEquals((year * 12) + month, result.getRecurrencePeriod());
+
+		assertNull(result.getAdditionalInfo());
+		assertNull(result.getPaidDate());
+		assertNull(result.getPaidValue());
+	}
+	
+	@Test
+	public void testGetBillDetailsBillMonthlyExistsNoMore() {
+		final Long idBill = 313l;
+		final int year = 2020;
+		final int month = 1;
+		
+		final String nameBill = "Bill X";
+		final String valueBill = "100.0";
+		final Long defaultCategoryId = 3312l;
+		final LocalDate dateStartBill = LocalDate.of(2019, 10, 8);
+		final LocalDate dateEndBill = LocalDate.of(2019, 12, 8);
+		
+		BillDefinition billDef = createBillDefinition(idBill, nameBill, valueBill, defaultCategoryId, dateStartBill, dateEndBill, RecurrenceType.MONTHLY);
+
+		given(
+				billDefinitionRepository.findByIdAndUserEmail(idBill, USER_EMAIL))
+		.willReturn(
+				Optional.of(billDef));
+		
+		assertThrows(MultiUserMessageException.class, () -> billService.getBillDetails(idBill, year, month));
+	}
+	
+	@Test
+	public void testGetBillDetailsBillNotExists() {
+		final Long idBill = 313l;
+		final int year = 2020;
+		final int month = 1;
+		
+		given(
+				billDefinitionRepository.findByIdAndUserEmail(idBill, USER_EMAIL))
+		.willReturn(
+				Optional.empty());
+		
+		assertThrows(MultiUserMessageException.class, () -> billService.getBillDetails(idBill, year, month));
 	}
 }

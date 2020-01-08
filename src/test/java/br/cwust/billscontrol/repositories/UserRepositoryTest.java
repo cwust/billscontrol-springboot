@@ -1,11 +1,14 @@
 package br.cwust.billscontrol.repositories;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,11 +25,11 @@ public class UserRepositoryTest {
 	@Autowired
 	private UserRepository userRepository;
 	
-	@BeforeEach
-	private void init() {
+	@AfterEach
+	private void cleanup() {
 		userRepository.deleteAll();
 	}
-	
+
 	@Test
 	public void testSave() {
 		User user = new User();
@@ -61,7 +64,6 @@ public class UserRepositoryTest {
 		assertTrue(userFindByEmail.isPresent());
 		
 		assertEquals(id, userFindByEmail.get().getId());
-		
 	}
 
 }
