@@ -44,7 +44,7 @@ public class BillInstance {
 		this.billDefinition = billDefinition;
 	}
 
-	@Column(name="recurrence_period", nullable = false)
+	@Column(name="recurrence_period", nullable = true)
 	public Integer getRecurrencePeriod() {
 		return recurrencePeriod;
 	}

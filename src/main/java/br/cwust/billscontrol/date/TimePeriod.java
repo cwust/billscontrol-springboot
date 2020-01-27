@@ -12,6 +12,11 @@ public class TimePeriod {
 		return new TimePeriod(date, date.plus(1, ChronoUnit.MONTHS).minus(1, ChronoUnit.DAYS));
 	}
 
+	public static TimePeriod forMonth(LocalDate date) {
+		return TimePeriod.forMonth(date.getYear(), date.getMonthValue());
+	}
+	
+	
 	public TimePeriod(LocalDate start, LocalDate end) {
 		if (start == null) {
 			throw new IllegalArgumentException("TimePeriod must hava a start date");

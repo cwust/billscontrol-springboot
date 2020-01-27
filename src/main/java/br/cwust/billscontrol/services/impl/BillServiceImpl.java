@@ -16,13 +16,16 @@ import br.cwust.billscontrol.date.TimePeriod;
 import br.cwust.billscontrol.dto.BillCreateDto;
 import br.cwust.billscontrol.dto.BillDetailsDto;
 import br.cwust.billscontrol.dto.BillListItemDto;
+import br.cwust.billscontrol.dto.BillUpdateDto;
 import br.cwust.billscontrol.dto.CategoryDto;
 import br.cwust.billscontrol.enums.RecurrenceType;
 import br.cwust.billscontrol.exception.BillsControlRuntimeException;
 import br.cwust.billscontrol.exception.MultiUserMessageException;
 import br.cwust.billscontrol.model.BillDefinition;
+import br.cwust.billscontrol.model.BillInstance;
 import br.cwust.billscontrol.model.Category;
 import br.cwust.billscontrol.repositories.BillDefinitionRepository;
+import br.cwust.billscontrol.repositories.BillInstanceRepository;
 import br.cwust.billscontrol.security.CurrentUser;
 import br.cwust.billscontrol.services.BillService;
 import br.cwust.billscontrol.services.CategoryService;
@@ -50,6 +53,9 @@ public class BillServiceImpl implements BillService {
 
 	@Autowired
 	private BillDefinitionRepository billDefinitionRepository;
+
+	@Autowired
+	private BillInstanceRepository billInstanceRepository;
 
 	@Override
 	public BillDefinition createBill(BillCreateDto bill) {
@@ -90,13 +96,7 @@ public class BillServiceImpl implements BillService {
 
 	@Override
 	public BillDetailsDto getBillDetails(Long billDefId, int year, int month) {
-		Optional<BillDefinition> billDefOpt = billDefinitionRepository.findByIdAndUserEmail(billDefId, currentUser.getEmail());
-		
-		if (!billDefOpt.isPresent()) {
-			throw new MultiUserMessageException(String.format("There is no bill with id %d for user %s", billDefId, currentUser.getEmail()));
-		}
-		
-		BillDefinition billDef = billDefOpt.get(); 
+		BillDefinition billDef = getBillDefinition(billDefId);
 		
 		TimePeriod billDefVigency = new TimePeriod(billDef.getStartDate(), billDef.getEndDate());
 		TimePeriod monthPeriod = TimePeriod.forMonth(year, month);
@@ -135,5 +135,41 @@ public class BillServiceImpl implements BillService {
 		default:
 			throw new IllegalArgumentException("No defaultDueDate defined for recurrenceType " + recurrenceType);
 		}	
+	}
+
+	@Override
+	public void updateBill(BillUpdateDto dto) {
+		BillDefinition billDef = getBillDefinition(dto.getId());
+		
+		Integer recurrencePeriod = getRecurrencePeriod(billDef.getRecurrenceType(), dto.getDueDate().getYear(), dto.getDueDate().getMonthValue());
+		
+		Optional<BillInstance> billInstOpt = billInstanceRepository.findByBillDefinitionIdAndRecurrencePeriod(dto.getId(), recurrencePeriod);
+		
+		BillInstance billInst; 
+		
+		if (billInstOpt.isPresent()) {
+			billInst = billInstOpt.get();
+		} else {
+			billInst = new BillInstance();
+			billInst.setBillDefinition(billDef);
+			billInst.setRecurrencePeriod(recurrencePeriod);
+		}
+		
+		billInst.setDueDate(dto.getDueDate());
+		billInst.setPaidDate(dto.getPaidDate());
+		billInst.setPaidValue(dto.getPaidValue());
+		billInst.setValue(dto.getValue());
+		billInst.setAdditionalInfo(dto.getAdditionalInfo());
+		billInstanceRepository.save(billInst);
+	}
+	
+	private BillDefinition getBillDefinition(Long billDefId) {
+		Optional<BillDefinition> billDefOpt = billDefinitionRepository.findByIdAndUserEmail(billDefId, currentUser.getEmail());
+		
+		if (!billDefOpt.isPresent()) {
+			throw new MultiUserMessageException(String.format("There is no bill with id %d for user %s", billDefId, currentUser.getEmail()));
+		}
+		
+		return billDefOpt.get(); 
 	}
 }
